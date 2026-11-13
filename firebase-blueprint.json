@@ -1,0 +1,191 @@
+{
+  "entities": {
+    "UserProfileDoc": {
+      "title": "UserProfileDoc",
+      "description": "Metadata document for a user's Reelist account and initial seed state.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The authenticated Firebase user UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "seeded": {
+          "type": "boolean",
+          "description": "Whether initial sample entries have been seeded for this user."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp of last profile state update.",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      },
+      "required": ["userId", "seeded", "updatedAt"]
+    },
+    "LibraryEntry": {
+      "title": "LibraryEntry",
+      "description": "A movie or TV series tracked in a user's personal watchlist library with episode progress.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Composite entry identifier in the format {tmdbId}_{mediaType}.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who owns this library entry.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "tmdbId": {
+          "type": "number",
+          "description": "Numeric TMDB identifier for the movie or series."
+        },
+        "mediaType": {
+          "type": "string",
+          "description": "Media type category.",
+          "enum": ["movie", "tv"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Current watch status in the user's library.",
+          "enum": ["watching", "watchlist", "watched", "dropped", "onhold"]
+        },
+        "title": {
+          "type": "string",
+          "description": "Cached title of the movie or series.",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "posterPath": {
+          "type": "string",
+          "description": "TMDB poster image path.",
+          "maxLength": 256
+        },
+        "backdropPath": {
+          "type": "string",
+          "description": "TMDB backdrop image path.",
+          "maxLength": 256
+        },
+        "year": {
+          "type": "string",
+          "description": "Release or first-air year.",
+          "maxLength": 16
+        },
+        "genres": {
+          "type": "array",
+          "description": "List of genre names (max 15 items)."
+        },
+        "runtimeMinutes": {
+          "type": "number",
+          "description": "Runtime in minutes per movie or average episode."
+        },
+        "rating": {
+          "type": "number",
+          "description": "User personal rating from 1 to 10."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Personal user notes on the title.",
+          "maxLength": 2000
+        },
+        "currentSeason": {
+          "type": "number",
+          "description": "Current season number."
+        },
+        "currentEpisode": {
+          "type": "number",
+          "description": "Current episode number."
+        },
+        "watched": {
+          "type": "object",
+          "description": "Map of seasonNumber string to array of watched episode numbers."
+        },
+        "resumeSeason": {
+          "type": "number",
+          "description": "Calculated season number to resume from."
+        },
+        "resumeEpisode": {
+          "type": "number",
+          "description": "Calculated episode number to resume from."
+        },
+        "totalEpisodes": {
+          "type": "number",
+          "description": "Total aired episodes count across regular seasons."
+        },
+        "watchedCount": {
+          "type": "number",
+          "description": "Total watched episodes count."
+        },
+        "hasNewEpisodes": {
+          "type": "boolean",
+          "description": "Whether new aired episodes exist after completion."
+        },
+        "lastWatchedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp when an episode was last checked.",
+          "maxLength": 64
+        },
+        "startedAt": {
+          "type": "string",
+          "description": "Date when the user started watching.",
+          "maxLength": 32
+        },
+        "finishedAt": {
+          "type": "string",
+          "description": "Date when the user finished watching.",
+          "maxLength": 32
+        },
+        "addedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp when the entry was created.",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp when the entry was last updated.",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "accentGradient": {
+          "type": "array",
+          "description": "Pair of hex color strings for fallback card gradient."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "tmdbId",
+        "mediaType",
+        "status",
+        "title",
+        "year",
+        "genres",
+        "addedAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfileDoc" },
+      "description": "Per-user metadata document restricted strictly to the owner."
+    },
+    "/users/{userId}/entries/{entryId}": {
+      "schema": { "$ref": "#/entities/LibraryEntry" },
+      "description": "Per-user watchlist and episode tracking entries restricted strictly to the owner."
+    }
+  }
+}

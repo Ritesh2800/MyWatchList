@@ -1,0 +1,215 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 0: Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Hardened Primitives
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUserProfileDoc(data, userId) {
+      return data.keys().hasAll(['userId', 'seeded', 'updatedAt'])
+        && data.keys().hasOnly(['userId', 'seeded', 'updatedAt'])
+        && data.userId is string
+        && data.userId.size() >= 1
+        && data.userId.size() <= 128
+        && data.userId == userId
+        && data.seeded is bool
+        && data.updatedAt is string
+        && data.updatedAt.size() >= 1
+        && data.updatedAt.size() <= 64;
+    }
+
+    function isValidOptionalNullableString(data, field, maxLen) {
+      return !(field in data)
+        || data[field] == null
+        || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalNumber(data, field, minVal, maxVal) {
+      return !(field in data)
+        || (data[field] is number && data[field] >= minVal && data[field] <= maxVal);
+    }
+
+    function isValidOptionalNullableNumber(data, field, minVal, maxVal) {
+      return !(field in data)
+        || data[field] == null
+        || (data[field] is number && data[field] >= minVal && data[field] <= maxVal);
+    }
+
+    function isValidEntry(data, entryId, userId) {
+      return data.keys().hasAll([
+          'id',
+          'userId',
+          'tmdbId',
+          'mediaType',
+          'status',
+          'title',
+          'year',
+          'genres',
+          'addedAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id',
+          'userId',
+          'tmdbId',
+          'mediaType',
+          'status',
+          'title',
+          'posterPath',
+          'backdropPath',
+          'year',
+          'genres',
+          'runtimeMinutes',
+          'rating',
+          'notes',
+          'currentSeason',
+          'currentEpisode',
+          'watched',
+          'resumeSeason',
+          'resumeEpisode',
+          'totalEpisodes',
+          'watchedCount',
+          'hasNewEpisodes',
+          'lastWatchedAt',
+          'startedAt',
+          'finishedAt',
+          'addedAt',
+          'updatedAt',
+          'accentGradient'
+        ])
+        && data.id is string
+        && data.id.size() >= 1
+        && data.id.size() <= 128
+        && data.id == entryId
+        && data.userId is string
+        && data.userId.size() >= 1
+        && data.userId.size() <= 128
+        && data.userId == userId
+        && data.tmdbId is number
+        && data.tmdbId > 0
+        && data.mediaType is string
+        && data.mediaType in ['movie', 'tv']
+        && data.status is string
+        && data.status in ['watching', 'watchlist', 'watched', 'dropped', 'onhold']
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 300
+        && data.year is string
+        && data.year.size() <= 16
+        && data.genres is list
+        && data.genres.size() <= 15
+        && (data.genres.size() == 0 || (data.genres[0] is string && data.genres[0].size() <= 64))
+        && data.addedAt is string
+        && data.addedAt.size() >= 1
+        && data.addedAt.size() <= 64
+        && data.updatedAt is string
+        && data.updatedAt.size() >= 1
+        && data.updatedAt.size() <= 64
+        && isValidOptionalNullableString(data, 'posterPath', 256)
+        && isValidOptionalNullableString(data, 'backdropPath', 256)
+        && isValidOptionalNumber(data, 'runtimeMinutes', 0, 2000)
+        && isValidOptionalNumber(data, 'rating', 1, 10)
+        && isValidOptionalNullableString(data, 'notes', 2000)
+        && isValidOptionalNumber(data, 'currentSeason', 0, 200)
+        && isValidOptionalNumber(data, 'currentEpisode', 0, 5000)
+        && (!( 'watched' in data ) || (data.watched is map && data.watched.size() <= 100))
+        && isValidOptionalNullableNumber(data, 'resumeSeason', 0, 200)
+        && isValidOptionalNullableNumber(data, 'resumeEpisode', 0, 5000)
+        && isValidOptionalNumber(data, 'totalEpisodes', 0, 10000)
+        && isValidOptionalNumber(data, 'watchedCount', 0, 10000)
+        && (!( 'hasNewEpisodes' in data ) || data.hasNewEpisodes is bool)
+        && isValidOptionalNullableString(data, 'lastWatchedAt', 64)
+        && isValidOptionalNullableString(data, 'startedAt', 32)
+        && isValidOptionalNullableString(data, 'finishedAt', 32)
+        && (
+          !( 'accentGradient' in data )
+          || (
+            data.accentGradient is list
+            && data.accentGradient.size() == 2
+            && data.accentGradient[0] is string
+            && data.accentGradient[0].size() <= 32
+            && data.accentGradient[1] is string
+            && data.accentGradient[1].size() <= 32
+          )
+        );
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUserProfileDoc(incoming(), userId);
+      allow update: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUserProfileDoc(incoming(), userId)
+        && incoming().userId == existing().userId
+        && incoming().diff(existing()).affectedKeys().hasOnly(['seeded', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /entries/{entryId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(entryId);
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(entryId)
+          && isValidEntry(incoming(), entryId, userId);
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(entryId)
+          && isValidEntry(incoming(), entryId, userId)
+          && incoming().id == existing().id
+          && incoming().userId == existing().userId
+          && incoming().tmdbId == existing().tmdbId
+          && incoming().mediaType == existing().mediaType
+          && incoming().addedAt == existing().addedAt
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'status',
+            'title',
+            'posterPath',
+            'backdropPath',
+            'year',
+            'genres',
+            'runtimeMinutes',
+            'rating',
+            'notes',
+            'currentSeason',
+            'currentEpisode',
+            'watched',
+            'resumeSeason',
+            'resumeEpisode',
+            'totalEpisodes',
+            'watchedCount',
+            'hasNewEpisodes',
+            'lastWatchedAt',
+            'startedAt',
+            'finishedAt',
+            'updatedAt',
+            'accentGradient'
+          ]);
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(entryId);
+      }
+    }
+  }
+}

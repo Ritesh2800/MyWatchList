@@ -1,0 +1,6 @@
+{
+  "name": "Reelist",
+  "description": "A minimal, responsive watchlist and episode tracker for movies and TV series.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
