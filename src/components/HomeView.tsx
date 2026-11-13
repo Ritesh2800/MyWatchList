@@ -263,7 +263,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {entries.length === 0 ? (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5">
             <p className="text-[13px] text-[var(--muted)]">
-              Rate or add titles to your library to unlock personalized AI recommendations.
+              Rate or add titles to your library to unlock personalized recommendations.
             </p>
             <button
               type="button"

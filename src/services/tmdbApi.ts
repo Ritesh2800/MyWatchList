@@ -134,12 +134,12 @@ export async function fetchRecommendations(
   fingerprint: string,
   forceRefresh = false
 ): Promise<RecommendationsResponse> {
-  const cacheKey = `recs_v1_${fingerprint || 'empty'}`;
+  const cacheKey = `recs_v2_${fingerprint || 'empty'}`;
   if (!forceRefresh && memoryCache.has(cacheKey)) {
     return memoryCache.get(cacheKey) as RecommendationsResponse;
   }
   const stored = !forceRefresh ? readStorageCache<RecommendationsResponse>(cacheKey) : null;
-  if (stored && !forceRefresh) {
+  if (stored && !forceRefresh && stored.source === 'gemini') {
     memoryCache.set(cacheKey, stored);
     return stored;
   }
@@ -168,7 +168,9 @@ export async function fetchRecommendations(
 
   const data = (await res.json()) as RecommendationsResponse;
   memoryCache.set(cacheKey, data);
-  writeStorageCache(cacheKey, data, 1000 * 60 * 60 * 6);
+  if (data.source === 'gemini') {
+    writeStorageCache(cacheKey, data, 1000 * 60 * 60 * 6);
+  }
   return data;
 }
 

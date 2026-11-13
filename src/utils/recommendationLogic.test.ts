@@ -6,6 +6,7 @@ import {
   buildTasteProfile,
   filterAndDeduplicateRecommendations,
   mapGenresToTmdbIds,
+  rankSeededRecommendations,
 } from './recommendationLogic.ts';
 
 function makeEntry(overrides: Partial<LibraryEntry>): LibraryEntry {
@@ -60,6 +61,7 @@ test('buildTasteProfile weights genres by ratings and penalizes dropped/low-rate
   assert.equal(profile.topGenres[0], 'Sci-Fi');
   assert.ok(!profile.topGenres.includes('Comedy'));
   assert.equal(profile.favorites.length, 2);
+  assert.equal(profile.favorites[0].tmdbId, 10);
   assert.equal(profile.disliked.length, 1);
   assert.equal(profile.disliked[0].title, 'Dropped Comedy');
   assert.deepEqual(profile.excludeKeys, ['10_tv', '11_movie', '12_movie']);
@@ -139,4 +141,94 @@ test('mapGenresToTmdbIds and buildMatchReasonForSummary handle movie & TV genres
     ]
   );
   assert.match(reason, /Severance \(9\/10\)/);
+});
+
+test('rankSeededRecommendations prioritizes multi-seed matches and cites user titles', () => {
+  const entries: LibraryEntry[] = [
+    makeEntry({
+      id: '10_tv',
+      tmdbId: 10,
+      mediaType: 'tv',
+      title: 'Severance',
+      status: 'watched',
+      rating: 10,
+      genres: ['Sci-Fi', 'Mystery'],
+    }),
+    makeEntry({
+      id: '11_movie',
+      tmdbId: 11,
+      mediaType: 'movie',
+      title: 'Interstellar',
+      status: 'watched',
+      rating: 9,
+      genres: ['Sci-Fi', 'Drama'],
+    }),
+  ];
+  const profile = buildTasteProfile(entries);
+
+  const ranked = rankSeededRecommendations(
+    [
+      {
+        seed: profile.favorites[0],
+        items: [
+          {
+            tmdbId: 10,
+            mediaType: 'tv',
+            title: 'Severance',
+            posterPath: null,
+            backdropPath: null,
+            year: '2022',
+            voteAverage: 8.8,
+            overview: '',
+            genres: ['Sci-Fi'],
+          },
+          {
+            tmdbId: 99,
+            mediaType: 'tv',
+            title: 'Mr. Robot',
+            posterPath: null,
+            backdropPath: null,
+            year: '2015',
+            voteAverage: 8.2,
+            overview: '',
+            genres: ['Drama'],
+          },
+          {
+            tmdbId: 70523,
+            mediaType: 'tv',
+            title: 'Dark',
+            posterPath: null,
+            backdropPath: null,
+            year: '2017',
+            voteAverage: 8.4,
+            overview: '',
+            genres: ['Sci-Fi', 'Mystery'],
+          },
+        ],
+      },
+      {
+        seed: profile.favorites[1],
+        items: [
+          {
+            tmdbId: 70523,
+            mediaType: 'tv',
+            title: 'Dark',
+            posterPath: null,
+            backdropPath: null,
+            year: '2017',
+            voteAverage: 8.4,
+            overview: '',
+            genres: ['Sci-Fi', 'Mystery'],
+          },
+        ],
+      },
+    ],
+    profile,
+    10
+  );
+
+  assert.equal(ranked.length, 2);
+  assert.equal(ranked[0].title, 'Dark');
+  assert.match(ranked[0].reason, /Severance & Interstellar/);
+  assert.match(ranked[1].reason, /Because you watched Severance \(10\/10\)/);
 });

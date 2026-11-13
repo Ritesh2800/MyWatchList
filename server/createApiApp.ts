@@ -18,6 +18,8 @@ import {
   buildTasteProfile,
   filterAndDeduplicateRecommendations,
   mapGenresToTmdbIds,
+  rankSeededRecommendations,
+  type SeedCandidateBatch,
 } from '../src/utils/recommendationLogic.ts';
 import {
   buildProviderFallbackUrl,
@@ -915,12 +917,16 @@ export function createApiApp(): Express {
       }
     }
 
-    // Fallback when GEMINI_API_KEY is not configured or transiently unavailable: smart TMDB discover weighted by user genres & ratings
+    // Built-in TMDB taste engine (works with zero Gemini env config required on Vercel)
     try {
       const cred = getTmdbCredential();
-      let pool: MediaSummary[] = [];
+      const batches: SeedCandidateBatch[] = [];
 
       if (cred.mode !== 'none') {
+        const seedCandidates = [...profile.favorites, ...profile.recentAndWatching]
+          .filter((s) => typeof s.tmdbId === 'number' && s.tmdbId > 0)
+          .slice(0, 4);
+
         const movieGenreIds = mapGenresToTmdbIds(profile.topGenres, 'movie').slice(0, 2);
         const tvGenreIds = mapGenresToTmdbIds(profile.topGenres, 'tv').slice(0, 2);
 
@@ -933,44 +939,58 @@ export function createApiApp(): Express {
             ? `/discover/tv?with_genres=${tvGenreIds.join('|')}&sort_by=vote_average.desc&vote_count.gte=150&language=en-US&page=1`
             : '/trending/tv/week?language=en-US';
 
-        const [movieRes, tvRes] = await Promise.all([
+        const [seedResults, movieRes, tvRes] = await Promise.all([
+          Promise.all(
+            seedCandidates.map(async (seed) => {
+              const recRes = await fetchTmdbJson<{ results: TmdbRawSummary[] }>(
+                `/${seed.mediaType}/${seed.tmdbId}/recommendations?language=en-US&page=1`
+              ).catch(() => ({ results: [] }));
+              const items = (recRes.results || [])
+                .map((r) => mapRawSummary(r, seed.mediaType))
+                .filter((x): x is MediaSummary => x !== null)
+                .slice(0, 10);
+              return { seed, items };
+            })
+          ),
           fetchTmdbJson<{ results: TmdbRawSummary[] }>(movieEndpoint).catch(() => ({ results: [] })),
           fetchTmdbJson<{ results: TmdbRawSummary[] }>(tvEndpoint).catch(() => ({ results: [] })),
         ]);
 
+        for (const batch of seedResults) {
+          if (batch.items.length > 0) {
+            batches.push(batch);
+          }
+        }
+
+        const discoverPool: MediaSummary[] = [];
         const movies = (movieRes.results || [])
           .map((m) => mapRawSummary(m, 'movie'))
           .filter((x): x is MediaSummary => x !== null);
         const tv = (tvRes.results || [])
           .map((t) => mapRawSummary(t, 'tv'))
           .filter((x): x is MediaSummary => x !== null);
-
         const maxLen = Math.max(movies.length, tv.length);
         for (let i = 0; i < maxLen; i++) {
-          if (tv[i]) pool.push(tv[i]);
-          if (movies[i]) pool.push(movies[i]);
+          if (tv[i]) discoverPool.push(tv[i]);
+          if (movies[i]) discoverPool.push(movies[i]);
+        }
+        if (discoverPool.length > 0) {
+          batches.push({ items: discoverPool });
         }
       } else {
-        pool = CATALOG_DETAILS.map(toSummary);
+        batches.push({ items: CATALOG_DETAILS.map(toSummary) });
       }
 
-      const candidates: RecommendationItem[] = pool.map((item) => ({
-        ...item,
-        reason: buildMatchReasonForSummary(item, profile.topGenres, profile.favorites),
-      }));
-
-      const recommendations = filterAndDeduplicateRecommendations(
-        candidates,
-        profile.excludeKeys
-      ).slice(0, 14);
-
-      res.json({
+      const recommendations = rankSeededRecommendations(batches, profile, 14);
+      const payload: RecommendationsResponse = {
         source: 'taste-match',
         topGenres: profile.topGenres,
         recommendations,
-        notice:
-          'Showing TMDB genre & rating matches. Add GEMINI_API_KEY in environment variables for Gemini AI-curated recommendations.',
-      });
+      };
+      if (recommendations.length > 0) {
+        apiCache.set(serverCacheKey, { expiresAt: Date.now() + CACHE_TTL_MS, data: payload });
+      }
+      res.json(payload);
     } catch (err) {
       res.status(502).json({
         error: err instanceof Error ? err.message : 'Unable to generate recommendations.',

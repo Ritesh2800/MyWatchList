@@ -1,6 +1,7 @@
 import type { LibraryEntry, MediaSummary, RecommendationItem } from '../types/reelist';
 
 export interface TasteTitleSummary {
+  tmdbId?: number;
   title: string;
   mediaType: 'movie' | 'tv';
   year: string;
@@ -99,6 +100,7 @@ export function buildTasteProfile(entries: LibraryEntry[]): TasteProfile {
     }
 
     const summary: TasteTitleSummary = {
+      tmdbId: entry.tmdbId,
       title: entry.title,
       mediaType: entry.mediaType,
       year: entry.year,
@@ -201,3 +203,77 @@ export function buildMatchReasonForSummary(
   }
   return 'Picked based on your library activity';
 }
+
+export interface SeedCandidateBatch {
+  seed?: TasteTitleSummary;
+  items: MediaSummary[];
+}
+
+export function rankSeededRecommendations(
+  batches: SeedCandidateBatch[],
+  profile: TasteProfile,
+  limit: number = 14
+): RecommendationItem[] {
+  const excluded = new Set(profile.excludeKeys);
+  const scored = new Map<
+    string,
+    { item: MediaSummary; score: number; matchedSeeds: TasteTitleSummary[] }
+  >();
+
+  for (const batch of batches) {
+    const seedWeight = batch.seed
+      ? typeof batch.seed.rating === 'number' && batch.seed.rating > 0
+        ? batch.seed.rating / 2
+        : batch.seed.status === 'watched'
+          ? 3.5
+          : 2.5
+      : 1.2;
+
+    batch.items.forEach((item, idx) => {
+      const key = `${item.tmdbId}_${item.mediaType}`;
+      if (excluded.has(key)) return;
+
+      const positionScore = Math.max(0.2, 2.2 - idx * 0.12);
+      const genreBonus = (item.genres || []).reduce((acc, g) => {
+        const s = profile.genreScores[g] || 0;
+        return acc + Math.max(-2, Math.min(3, s * 0.35));
+      }, 0);
+      const qualityBonus = item.voteAverage > 0 ? (item.voteAverage - 6) * 0.25 : 0;
+
+      const existing = scored.get(key);
+      if (existing) {
+        existing.score += seedWeight + positionScore;
+        if (batch.seed && !existing.matchedSeeds.some((s) => s.title === batch.seed!.title)) {
+          existing.matchedSeeds.push(batch.seed);
+        }
+      } else {
+        scored.set(key, {
+          item,
+          score: seedWeight + positionScore + genreBonus + qualityBonus,
+          matchedSeeds: batch.seed ? [batch.seed] : [],
+        });
+      }
+    });
+  }
+
+  return Array.from(scored.values())
+    .sort((a, b) => b.score - a.score || b.item.voteAverage - a.item.voteAverage)
+    .slice(0, limit)
+    .map(({ item, matchedSeeds }) => {
+      let reason: string;
+      if (matchedSeeds.length >= 2) {
+        reason = `Recommended because you enjoyed ${matchedSeeds[0].title} & ${matchedSeeds[1].title}`;
+      } else if (matchedSeeds.length === 1) {
+        const s = matchedSeeds[0];
+        const ratingBit = typeof s.rating === 'number' && s.rating > 0 ? ` (${s.rating}/10)` : '';
+        reason = `Because you ${s.status === 'watching' ? 'are watching' : 'watched'} ${s.title}${ratingBit}`;
+      } else {
+        reason = buildMatchReasonForSummary(item, profile.topGenres, profile.favorites);
+      }
+      return {
+        ...item,
+        reason,
+      };
+    });
+}
+

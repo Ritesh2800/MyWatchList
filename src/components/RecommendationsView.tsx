@@ -42,7 +42,7 @@ export const RecommendationsView: React.FC<RecommendationsViewProps> = ({
         <div>
           <div className="inline-flex items-center gap-2 text-[12px] font-semibold tracking-[0.06em] text-[var(--accent)] uppercase">
             <SparklesIcon size={14} />
-            <span>{source === 'gemini' ? 'Gemini AI Picks' : 'Smart Taste Match'}</span>
+            <span>{source === 'gemini' ? 'Gemini AI Picks' : 'Personalized Picks'}</span>
           </div>
           <h1 className="mt-1 font-display text-[26px] leading-tight font-bold tracking-[-0.02em] text-[var(--ink)] md:text-[32px]">
             Recommended for you

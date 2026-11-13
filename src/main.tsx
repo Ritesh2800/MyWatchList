@@ -5,6 +5,12 @@ import './index.css';
 
 if ('serviceWorker' in navigator) {
   if (import.meta.env.PROD) {
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
     registerSW({ immediate: true });
   } else {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
