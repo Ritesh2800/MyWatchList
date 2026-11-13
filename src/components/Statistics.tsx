@@ -145,7 +145,7 @@ export const Statistics: React.FC<StatisticsProps> = ({
           ) : (
             <div className="space-y-5">
               <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:flex sm:flex-wrap sm:items-center sm:gap-8">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:flex sm:flex-wrap sm:items-center sm:gap-8">
                   <div>
                     <p className="text-[12px] font-medium text-[var(--muted)]">Total titles</p>
                     <p className="font-display text-[24px] font-bold text-[var(--ink)] tabular-nums">
@@ -310,7 +310,7 @@ export const Statistics: React.FC<StatisticsProps> = ({
             type="button"
             aria-pressed={monthWindow === 6}
             onClick={() => setMonthWindow(6)}
-            className={`min-h-[40px] rounded-full px-4 text-[13px] font-semibold whitespace-nowrap transition-colors ${
+            className={`min-h-[40px] rounded-full px-3 text-[12px] font-semibold whitespace-nowrap transition-colors sm:px-4 sm:text-[13px] ${
               monthWindow === 6
                 ? 'bg-[var(--inverse-bg)] text-[var(--inverse-ink)]'
                 : 'text-[var(--muted)] hover:text-[var(--ink)]'
@@ -322,7 +322,7 @@ export const Statistics: React.FC<StatisticsProps> = ({
             type="button"
             aria-pressed={monthWindow === 12}
             onClick={() => setMonthWindow(12)}
-            className={`min-h-[40px] rounded-full px-4 text-[13px] font-semibold whitespace-nowrap transition-colors ${
+            className={`min-h-[40px] rounded-full px-3 text-[12px] font-semibold whitespace-nowrap transition-colors sm:px-4 sm:text-[13px] ${
               monthWindow === 12
                 ? 'bg-[var(--inverse-bg)] text-[var(--inverse-ink)]'
                 : 'text-[var(--muted)] hover:text-[var(--ink)]'
@@ -509,7 +509,7 @@ export const Statistics: React.FC<StatisticsProps> = ({
                       <YAxis
                         type="category"
                         dataKey="genre"
-                        width={108}
+                        width={92}
                         tick={{ fill: 'var(--ink)', fontSize: 12 }}
                         axisLine={false}
                         tickLine={false}

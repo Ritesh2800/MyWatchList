@@ -189,7 +189,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   key={entry.id}
                   type="button"
                   onClick={() => onOpenDetails(entry.mediaType, entry.tmdbId)}
-                  className="tap-press group w-[262px] shrink-0 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+                  className="tap-press group w-[236px] shrink-0 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] sm:w-[262px]"
                 >
                   <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[18px]">
                     <MediaArt
@@ -237,9 +237,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       {/* Recommended For You (Single-row horizontal scroll so Trending stays visible above the fold) */}
       <section aria-label="Recommended for you">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <h2 className="font-display truncate text-[20px] font-bold tracking-[-0.01em] text-[var(--ink)]">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
+            <h2 className="font-display text-[19px] font-bold tracking-[-0.01em] text-[var(--ink)] sm:text-[20px]">
               Recommended for you
             </h2>
             {entries.length > 0 && (

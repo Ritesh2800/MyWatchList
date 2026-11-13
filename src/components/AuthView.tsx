@@ -88,7 +88,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLocalSignIn }) => {
       const displayName =
         name.trim() ||
         trimmedEmail.split('@')[0].replace(/^\w/, (c) => c.toUpperCase()) ||
-        'MyWatchList Member';
+        'SeenIt Member';
       onLocalSignIn({
         uid: 'local-default',
         displayName,
@@ -120,10 +120,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLocalSignIn }) => {
     <div className="flex min-h-dvh items-center justify-center bg-[var(--bg)] px-4 py-12 text-[var(--ink)]">
       <div className="w-full max-w-sm rounded-[26px] border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-8">
         <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent)]/15 font-display text-lg font-bold text-[var(--accent)]">
-          M
+          S
         </div>
         <h1 className="mt-4 font-display text-[30px] font-bold tracking-[-0.02em]">
-          Sign in to MyWatchList
+          Sign in to SeenIt
         </h1>
         <p className="mt-1.5 text-[14px] text-[var(--muted)]">
           Sync your watchlist and episode progress across devices with Google &amp; Cloud Firestore.
@@ -231,7 +231,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLocalSignIn }) => {
                 className="min-h-[44px] text-[13px] font-medium text-[var(--muted)] hover:text-[var(--ink)]"
               >
                 {mode === 'signin'
-                  ? 'New to MyWatchList? Create an account'
+                  ? 'New to SeenIt? Create an account'
                   : 'Already have an account? Sign in'}
               </button>
             </div>

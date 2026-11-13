@@ -13,6 +13,7 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: [
           'icon.svg',
+          'favicon-32x32.png',
           'apple-touch-icon.png',
           'pwa-192x192.png',
           'pwa-512x512.png',
@@ -20,8 +21,8 @@ export default defineConfig(() => {
         ],
         manifest: {
           id: '/',
-          name: 'MyWatchList',
-          short_name: 'MyWatchList',
+          name: 'SeenIt',
+          short_name: 'SeenIt',
           description: 'A minimal, responsive watchlist and episode tracker for movies and TV series.',
           theme_color: '#0b0b0d',
           background_color: '#0b0b0d',

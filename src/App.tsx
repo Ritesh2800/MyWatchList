@@ -490,7 +490,11 @@ function ReelistApp() {
         onGoHome={() => navigateTopTab('home')}
       />
 
-      <main className="mx-auto max-w-[1344px] px-4 pt-[78px] pb-[118px] md:px-8 md:pt-[92px] md:pb-[124px]">
+      <main
+        className={`mx-auto max-w-[1344px] px-4 pb-[118px] md:px-8 md:pb-[124px] ${
+          currentNav.tab === 'home' ? 'pt-5 md:pt-7' : 'pt-[78px] md:pt-[92px]'
+        }`}
+      >
         {!isOnline && (
           <div
             role="status"

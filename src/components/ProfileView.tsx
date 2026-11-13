@@ -66,7 +66,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {/* Account Header */}
       <section aria-label="Account" className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] p-5 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-3.5 sm:gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--inverse-bg)] font-display text-xl font-bold text-[var(--inverse-ink)]">
               {user.photoURL ? (
                 <img
@@ -79,8 +79,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <span>{initial}</span>
               )}
             </div>
-            <div className="min-w-0">
-              <h2 className="font-display text-[20px] font-bold text-[var(--ink)]">
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate font-display text-[20px] font-bold text-[var(--ink)]">
                 {user.displayName}
               </h2>
               <p className="truncate text-[14px] text-[var(--muted)]">{user.email}</p>
@@ -143,7 +143,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border)] pt-5">
           <div>
-            <h3 className="font-display text-[16px] font-bold text-[var(--ink)]">Install MyWatchList</h3>
+            <h3 className="font-display text-[16px] font-bold text-[var(--ink)]">Install SeenIt</h3>
             <p className="text-[13px] text-[var(--muted)]">
               Add to your home screen or desktop for offline access.
             </p>
@@ -255,7 +255,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Install MyWatchList instructions"
+            aria-label="Install SeenIt instructions"
             className="animate-backdrop-in fixed inset-0 z-[60] flex items-center justify-center bg-black/55 p-4 backdrop-blur-[3px]"
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowInstallGuide(false);
@@ -264,7 +264,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <div className="glass-sheet animate-sheet-up w-full max-w-sm rounded-[24px] p-6">
               <div className="flex items-center justify-between">
                 <h3 className="font-display text-lg font-bold text-[var(--ink)]">
-                  Install MyWatchList
+                  Install SeenIt
                 </h3>
                 <button
                   type="button"
@@ -279,11 +279,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <ol className="mt-3 space-y-2 text-sm text-[var(--muted)]">
                   <li>1. Tap the <strong className="text-[var(--ink)]">Share</strong> button in Safari&apos;s toolbar.</li>
                   <li>2. Scroll down and tap <strong className="text-[var(--ink)]">Add to Home Screen</strong>.</li>
-                  <li>3. Tap <strong className="text-[var(--ink)]">Add</strong> to launch MyWatchList as a standalone app.</li>
+                  <li>3. Tap <strong className="text-[var(--ink)]">Add</strong> to launch SeenIt as a standalone app.</li>
                 </ol>
               ) : (
                 <ol className="mt-3 space-y-2 text-sm text-[var(--muted)]">
-                  <li>1. In Chrome or Edge, click the <strong className="text-[var(--ink)]">Install</strong> icon in the address bar (or browser menu → Install MyWatchList).</li>
+                  <li>1. In Chrome or Edge, click the <strong className="text-[var(--ink)]">Install</strong> icon in the address bar (or browser menu → Install SeenIt).</li>
                   <li>2. On Android, tap the browser menu → <strong className="text-[var(--ink)]">Add to Home screen</strong>.</li>
                 </ol>
               )}

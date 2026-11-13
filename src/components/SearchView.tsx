@@ -123,7 +123,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
 
       <div className="mt-6">
         <h2 className="font-display text-[17px] font-semibold text-[var(--muted)]">
-          {query.trim() ? `Results for "${query.trim()}"` : 'Popular on MyWatchList'}
+          {query.trim() ? `Results for "${query.trim()}"` : 'Popular on SeenIt'}
         </h2>
 
         {error && (
@@ -168,16 +168,16 @@ export const SearchView: React.FC<SearchViewProps> = ({
               return (
                 <div
                   key={key}
-                  className={`relative flex items-center gap-3.5 rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-3 transition-colors duration-200 hover:border-[var(--muted)]/45 ${
+                  className={`relative flex items-center gap-2.5 rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-2.5 transition-colors duration-200 hover:border-[var(--muted)]/45 sm:gap-3.5 sm:p-3 ${
                     openDropdownKey === key ? 'z-30' : ''
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => onOpenDetails(item.mediaType, item.tmdbId)}
-                    className="tap-press flex min-w-0 flex-1 items-center gap-3.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+                    className="tap-press flex min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] sm:gap-3.5"
                   >
-                    <div className="aspect-[2/3] w-[68px] shrink-0 overflow-hidden rounded-[12px]">
+                    <div className="aspect-[2/3] w-[58px] shrink-0 overflow-hidden rounded-[12px] sm:w-[68px]">
                       <MediaArt
                         title={item.title}
                         path={item.posterPath}

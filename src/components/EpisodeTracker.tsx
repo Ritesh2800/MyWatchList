@@ -223,7 +223,7 @@ export const EpisodeTracker: React.FC<EpisodeTrackerProps> = ({
 
       {/* Overall Series Progress */}
       <div className="mt-4">
-        <div className="flex items-center justify-between text-[13px] text-[var(--muted)] tabular-nums">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[13px] text-[var(--muted)] tabular-nums">
           <span>Overall progress</span>
           <span>
             {progress.watchedCount} / {progress.totalAiredEpisodes} aired watched ({progress.percent}%)
@@ -381,7 +381,7 @@ export const EpisodeTracker: React.FC<EpisodeTrackerProps> = ({
                       <button
                         type="button"
                         onClick={() => handleMarkPrevious(ep)}
-                        className="tap-press min-h-[44px] shrink-0 rounded-full px-3 text-[12px] font-medium text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--ink)]"
+                        className="tap-press min-h-[44px] shrink-0 rounded-full px-2.5 text-[11px] font-medium whitespace-nowrap text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--ink)] sm:px-3 sm:text-[12px]"
                       >
                         Mark previous
                       </button>

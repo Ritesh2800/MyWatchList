@@ -210,7 +210,7 @@ export const CompletedModal: React.FC<CompletedModalProps> = ({
               )}
             </div>
             <div
-              className="mt-2 flex flex-wrap gap-1.5"
+              className="mt-2 grid max-w-[244px] grid-cols-5 gap-2 sm:flex sm:max-w-none sm:flex-wrap sm:gap-1.5"
               role="group"
               aria-label="My rating 1 to 10"
             >

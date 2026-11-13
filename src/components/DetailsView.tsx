@@ -488,7 +488,7 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
                 href={`https://www.youtube.com/watch?v=${details.trailerKey}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="tap-press inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 text-[13px] font-semibold text-[var(--ink)] hover:bg-[var(--surface-subtle)]"
+                className="tap-press inline-flex min-h-[44px] shrink-0 self-start items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 text-[13px] font-semibold text-[var(--ink)] hover:bg-[var(--surface-subtle)] sm:self-end"
               >
                 <PlayIcon size={14} />
                 <span>Trailer</span>
@@ -543,17 +543,17 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
                     ? `Watch ${formatEpisodeCode(nextResumeSeason, nextResumeEpisode)} on ${firstProvider?.providerName || 'streaming app'}`
                     : `Watch on ${firstProvider?.providerName || 'streaming app'}`
                 }
-                className="tap-press inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[var(--accent)] px-4 text-[14px] font-semibold text-white shadow-sm hover:brightness-95"
+                className="tap-press inline-flex min-h-[44px] max-w-full items-center gap-2 rounded-full bg-[var(--accent)] px-4 text-[13px] font-semibold text-white shadow-sm hover:brightness-95 sm:text-[14px]"
               >
-                <PlayIcon size={14} />
-                <span>
+                <PlayIcon size={14} className="shrink-0" />
+                <span className="truncate">
                   Resume streaming
                   {firstProvider ? ` · ${firstProvider.providerName}` : ''}
                   {mediaType === 'tv' && nextResumeSeason && nextResumeEpisode
                     ? ` (${formatEpisodeCode(nextResumeSeason, nextResumeEpisode)})`
                     : ''}
                 </span>
-                <ExternalLinkIcon size={13} className="opacity-85" />
+                <ExternalLinkIcon size={13} className="shrink-0 opacity-85" />
               </a>
             )}
 
@@ -637,7 +637,7 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
 
         <div className="mt-4">
           <p className="text-[13px] font-medium text-[var(--muted)]">My rating (1–10)</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-2 grid max-w-[260px] grid-cols-5 gap-2 sm:flex sm:max-w-none sm:flex-wrap sm:gap-1.5">
             {Array.from({ length: 10 }, (_, i) => i + 1).map((score) => {
               const selected = existingEntry?.rating === score;
               return (

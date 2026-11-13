@@ -26,7 +26,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
             onClick={() => window.location.reload()}
             className="mt-6 min-h-[44px] rounded-full bg-[var(--inverse-bg)] px-6 text-sm font-semibold text-[var(--inverse-ink)]"
           >
-            Reload MyWatchList
+            Reload SeenIt
           </button>
         </div>
       );

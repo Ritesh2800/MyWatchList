@@ -70,12 +70,12 @@ export const AppBootSkeleton: React.FC = () => (
   <div
     className="min-h-dvh bg-[var(--bg)] text-[var(--ink)]"
     aria-busy="true"
-    aria-label="Loading MyWatchList"
+    aria-label="Loading SeenIt"
   >
     <header className="fixed inset-x-0 top-0 z-30">
       <div className="mx-auto flex max-w-[1344px] items-center justify-between px-4 pt-3.5 md:px-8 md:pt-5">
-        <span className="font-display text-[22px] font-bold tracking-[-0.02em] text-[var(--ink)]">
-          MyWatchList
+        <span className="font-display text-[28px] font-bold tracking-[-0.03em] leading-none text-[var(--ink)] md:text-[34px]">
+          Seen<span className="text-[var(--accent)]">It</span>
         </span>
         <div className="skeleton-shimmer h-[44px] w-[44px] rounded-full" />
       </div>

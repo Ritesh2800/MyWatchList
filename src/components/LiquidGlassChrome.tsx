@@ -50,16 +50,21 @@ export const TopBar: React.FC<TopBarProps> = ({
   const isProfile = activeTab === 'profile';
 
   return (
-    <header className="pointer-events-none fixed top-0 right-0 left-0 z-40">
-      <div className="mx-auto flex max-w-[1344px] items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))] md:px-8 md:pt-6">
+    <header
+      className={`pointer-events-none z-40 ${
+        isHome ? 'relative' : 'fixed top-0 right-0 left-0'
+      }`}
+    >
+      <div className="mx-auto flex max-w-[1344px] items-center justify-between px-4 pt-[max(0.85rem,env(safe-area-inset-top))] md:px-8 md:pt-6">
         {isHome ? (
           <button
             type="button"
             onClick={onGoHome}
-            className="glass glass-refract tap-press pointer-events-auto inline-flex min-h-[44px] items-center rounded-full px-4 text-left transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            aria-label="SeenIt"
+            className="tap-press pointer-events-auto inline-flex min-h-[44px] items-center rounded-lg text-left transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           >
-            <span className="font-display text-[20px] font-bold tracking-[-0.02em] text-[var(--ink)] md:text-[22px]">
-              MyWatchList
+            <span className="font-display text-[28px] font-bold tracking-[-0.03em] leading-none text-[var(--ink)] md:text-[34px]">
+              Seen<span className="text-[var(--accent)]">It</span>
             </span>
           </button>
         ) : (
@@ -78,20 +83,22 @@ export const TopBar: React.FC<TopBarProps> = ({
           onClick={onOpenProfile}
           aria-label="Open profile"
           aria-pressed={isProfile}
-          className={`glass glass-refract tap-press pointer-events-auto inline-flex h-[44px] w-[44px] items-center justify-center overflow-hidden font-display text-[15px] font-semibold text-[var(--ink)] transition-all duration-200 hover:scale-[1.07] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
+          className={`glass glass-refract tap-press pointer-events-auto inline-flex h-[48px] w-[48px] items-center justify-center p-[4px] font-display text-[15px] font-semibold text-[var(--ink)] transition-all duration-200 hover:scale-[1.07] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
             isProfile ? 'ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]' : ''
           }`}
         >
-          {user.photoURL ? (
-            <img
-              src={user.photoURL}
-              alt={user.displayName}
-              referrerPolicy="no-referrer"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span>{initial}</span>
-          )}
+          <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full ring-1 ring-white/30">
+            {user.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt={user.displayName}
+                referrerPolicy="no-referrer"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span>{initial}</span>
+            )}
+          </span>
         </button>
       </div>
     </header>
@@ -120,18 +127,18 @@ export const FloatingBottomNav: React.FC<FloatingNavProps> = ({
   const activeIdx = navItems.findIndex((item) => item.id === activeTab);
 
   return (
-    <div className="pointer-events-none fixed right-0 bottom-[max(22px,env(safe-area-inset-bottom))] left-0 z-50 flex items-center justify-center gap-3 px-4">
+    <div className="pointer-events-none fixed right-0 bottom-[max(16px,env(safe-area-inset-bottom))] left-0 z-50 flex items-center justify-center gap-2.5 px-3 sm:bottom-[max(22px,env(safe-area-inset-bottom))] sm:gap-3 sm:px-4">
       <nav
         aria-label="Primary navigation"
-        className="glass glass-refract pointer-events-auto relative flex items-center p-[6px]"
+        className="glass glass-refract pointer-events-auto relative grid grid-cols-3 items-center p-[6px]"
       >
         {/* Sliding glass pill indicator */}
         <span
           aria-hidden="true"
           data-testid="nav-sliding-pill"
-          className="glass-active pointer-events-none absolute top-[6px] left-[6px] h-[52px] w-[84px] rounded-full transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          className="glass-active pointer-events-none absolute top-[6px] bottom-[6px] left-[6px] w-[calc((100%-12px)/3)] rounded-full transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{
-            transform: activeIdx >= 0 ? `translateX(${activeIdx * 84}px)` : 'translateX(0px) scale(0.9)',
+            transform: activeIdx >= 0 ? `translateX(${activeIdx * 100}%)` : 'translateX(0%) scale(0.9)',
             opacity: activeIdx >= 0 ? 1 : 0,
           }}
         />
@@ -144,7 +151,7 @@ export const FloatingBottomNav: React.FC<FloatingNavProps> = ({
               type="button"
               onClick={() => onNavigate(item.id)}
               aria-current={isActive ? 'page' : undefined}
-              className={`tap-press group relative z-10 flex h-[52px] w-[84px] flex-col items-center justify-center gap-1 rounded-full whitespace-nowrap transition-[color,opacity] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
+              className={`tap-press group relative z-10 flex h-[48px] w-[72px] flex-col items-center justify-center gap-1 rounded-full whitespace-nowrap transition-[color,opacity] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] sm:h-[52px] sm:w-[84px] ${
                 isActive
                   ? 'text-[var(--ink)] opacity-100'
                   : 'text-[var(--ink)] opacity-70 hover:opacity-100'
@@ -168,7 +175,7 @@ export const FloatingBottomNav: React.FC<FloatingNavProps> = ({
         onClick={onOpenQuickAdd}
         aria-label={quickAddOpen ? 'Close quick add' : 'Quick add movie or series'}
         aria-expanded={quickAddOpen}
-        className={`glass glass-refract tap-press pointer-events-auto inline-flex h-[64px] w-[64px] shrink-0 items-center justify-center transition-all duration-200 hover:scale-[1.06] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
+        className={`glass glass-refract tap-press pointer-events-auto inline-flex h-[58px] w-[58px] shrink-0 items-center justify-center transition-all duration-200 hover:scale-[1.06] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] sm:h-[64px] sm:w-[64px] ${
           quickAddOpen
             ? 'border-[var(--accent)]/60 bg-[var(--accent)]/20 text-[var(--accent)]'
             : 'text-[var(--ink)]'

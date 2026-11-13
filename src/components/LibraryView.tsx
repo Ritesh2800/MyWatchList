@@ -130,8 +130,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
       </div>
 
       {/* Filter & Sort Controls */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter by type">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex items-center gap-1" role="group" aria-label="Filter by type">
           {(
             [
               { id: 'all', label: 'All' },
@@ -145,7 +145,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
                 key={f.id}
                 type="button"
                 onClick={() => setMediaFilter(f.id)}
-                className={`tap-press min-h-[44px] rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                className={`tap-press min-h-[40px] rounded-full px-3 text-[13px] font-medium whitespace-nowrap transition-colors sm:min-h-[44px] sm:px-3.5 ${
                   active
                     ? 'bg-[var(--surface-subtle)] text-[var(--ink)] font-semibold'
                     : 'text-[var(--muted)] hover:text-[var(--ink)]'
@@ -157,7 +157,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
           })}
         </div>
 
-        <div className="relative z-20 flex items-center gap-2 text-[13px] text-[var(--muted)]">
+        <div className="relative z-20 flex items-center text-[13px] text-[var(--muted)]">
           <LiquidGlassDropdown
             ariaLabel="Sort library"
             menuLabel="Sort library"
@@ -168,7 +168,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
             options={SORT_OPTIONS}
             align="right"
             menuWidthClass="w-52"
-            triggerClassName="bg-[var(--surface)] px-4"
+            triggerClassName="bg-[var(--surface)] px-3.5 sm:px-4 min-h-[40px] sm:min-h-[44px]"
             onSelect={(val) => setSortBy(val as LibrarySortOption)}
           />
         </div>
@@ -191,7 +191,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
           </button>
         </div>
       ) : (
-        <div className="mt-5 grid grid-cols-3 gap-3 md:grid-cols-[repeat(auto-fill,minmax(168px,1fr))] md:gap-5">
+        <div className="mt-5 grid grid-cols-2 gap-3.5 sm:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(168px,1fr))] md:gap-5">
           {items.map((entry) => {
             const subLabel = getSubLabel(entry);
             const showStatusPill = activeStatus === 'all';
@@ -220,7 +220,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
                   {(statusPillText || entry.hasNewEpisodes) && (
                     <div className="pointer-events-none absolute top-2 right-2 left-2 flex flex-wrap items-start gap-1">
                       {statusPillText && (
-                        <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/20 bg-[#141413]/78 px-2 py-0.5 text-[10px] font-semibold leading-tight text-white shadow-sm backdrop-blur-md md:px-2.5 md:py-1 md:text-[11px]">
+                        <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/20 bg-[#141413]/78 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-white shadow-sm backdrop-blur-md md:py-1">
                           {(entry.status === 'watching' || entry.status === 'watched') && (
                             <span
                               className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]"

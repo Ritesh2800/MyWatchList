@@ -38,6 +38,7 @@ export const LiquidGlassDropdown: React.FC<LiquidGlassDropdownProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [openUpward, setOpenUpward] = useState(false);
+  const [resolvedAlign, setResolvedAlign] = useState<'left' | 'right'>(align);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -88,12 +89,21 @@ export const LiquidGlassDropdown: React.FC<LiquidGlassDropdownProps> = ({
       const usableBelow = window.innerHeight - rect.bottom - 104;
       const usableAbove = rect.top - 78;
       setOpenUpward(usableBelow < estimatedMenuHeight && usableAbove > usableBelow);
+
+      const estimatedMenuWidth = 228;
+      if (align === 'right' && rect.right - estimatedMenuWidth < 12) {
+        setResolvedAlign('left');
+      } else if (align === 'left' && rect.left + estimatedMenuWidth > window.innerWidth - 12) {
+        setResolvedAlign('right');
+      } else {
+        setResolvedAlign(align);
+      }
     }
     setOpenState(!open);
   };
 
   return (
-    <div ref={containerRef} className="relative inline-block">
+    <div ref={containerRef} className="relative inline-block max-w-full">
       <button
         ref={triggerRef}
         type="button"
@@ -101,14 +111,14 @@ export const LiquidGlassDropdown: React.FC<LiquidGlassDropdownProps> = ({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={handleToggle}
-        className={`tap-press inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
+        className={`tap-press inline-flex min-h-[44px] max-w-full items-center justify-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] ${
           isActiveTrigger
             ? 'bg-[var(--inverse-bg)] text-[var(--inverse-ink)]'
             : 'border border-[var(--border)] bg-[var(--surface-subtle)] text-[var(--ink)] hover:border-[var(--accent)]'
         } ${triggerClassName}`}
       >
         {leadingIcon}
-        <span>{triggerLabel}</span>
+        <span className="truncate">{triggerLabel}</span>
         <ChevronDownIcon
           size={15}
           className={`shrink-0 transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${open ? 'rotate-180' : ''} ${
@@ -122,8 +132,8 @@ export const LiquidGlassDropdown: React.FC<LiquidGlassDropdownProps> = ({
           ref={menuRef}
           role="menu"
           aria-label={menuLabel || ariaLabel}
-          className={`glass-menu glass-refract animate-menu-up absolute z-50 p-1.5 ${menuWidthClass} ${
-            align === 'left' ? 'left-0' : 'right-0'
+          className={`glass-menu glass-refract animate-menu-up absolute z-50 max-w-[calc(100vw-1.5rem)] p-1.5 ${menuWidthClass} ${
+            resolvedAlign === 'left' ? 'left-0' : 'right-0'
           } ${openUpward ? 'bottom-full mb-2' : 'top-full mt-2'}`}
         >
           {options.map((opt) => {
