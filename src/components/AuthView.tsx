@@ -12,6 +12,26 @@ interface AuthViewProps {
   onLocalSignIn: (user: UserProfile) => void;
 }
 
+function formatAuthError(err: unknown, fallback: string): string {
+  const code =
+    typeof err === 'object' && err !== null && 'code' in err
+      ? String((err as { code?: unknown }).code || '')
+      : '';
+  const message = err instanceof Error ? err.message : fallback;
+
+  if (code === 'auth/unauthorized-domain' || message.includes('auth/unauthorized-domain')) {
+    const host = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
+    return `Domain "${host}" is not authorized in Firebase Auth. Add "${host}" under Firebase Console → Authentication → Settings → Authorized domains.`;
+  }
+  if (code === 'auth/popup-blocked') {
+    return 'Sign-in popup was blocked by your browser. Allow popups for this site and try again.';
+  }
+  if (code === 'auth/popup-closed-by-user') {
+    return 'Sign-in popup was closed before completing.';
+  }
+  return message;
+}
+
 export const AuthView: React.FC<AuthViewProps> = ({ onLocalSignIn }) => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [showEmailForm, setShowEmailForm] = useState(false);
@@ -38,7 +58,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLocalSignIn }) => {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-in failed.');
+      setError(formatAuthError(err, 'Google sign-in failed.'));
     } finally {
       setSubmitting(false);
     }

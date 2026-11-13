@@ -56,9 +56,9 @@ export const TopBar: React.FC<TopBarProps> = ({
           <button
             type="button"
             onClick={onGoHome}
-            className="tap-press pointer-events-auto inline-flex min-h-[44px] items-center rounded-full px-1 text-left transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            className="glass glass-refract tap-press pointer-events-auto inline-flex min-h-[44px] items-center rounded-full px-4 text-left transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           >
-            <span className="font-display text-[24px] font-bold tracking-[-0.02em] text-[var(--ink)] md:text-[26px]">
+            <span className="font-display text-[20px] font-bold tracking-[-0.02em] text-[var(--ink)] md:text-[22px]">
               MyWatchList
             </span>
           </button>
