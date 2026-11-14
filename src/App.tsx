@@ -34,6 +34,14 @@ import type {
   WatchStatus,
 } from './types/reelist';
 import { detectNewSeasonForCompletedSeries } from './utils/episodeLogic';
+import {
+  areNavStatesEqual,
+  isValidHistoryPayload,
+  navStateToPath,
+  pathToNavState,
+  pushNavStack,
+  type NavState,
+} from './utils/navigationLogic';
 import { buildTasteProfile } from './utils/recommendationLogic';
 
 const THEME_STORAGE_KEY = 'reelist_theme_v1';
@@ -74,9 +82,13 @@ function readInitialLocalUser(): UserProfile | null {
   return isFirebaseConfigured ? null : DEFAULT_LOCAL_USER;
 }
 
-interface NavState {
-  tab: ActiveTab;
-  detailTarget?: { mediaType: MediaType; tmdbId: number };
+function readInitialNavStack(): NavState[] {
+  if (typeof window === 'undefined') return [{ tab: 'home' }];
+  if (isValidHistoryPayload(window.history.state)) {
+    return window.history.state.stack;
+  }
+  const initial = pathToNavState(window.location.pathname);
+  return [initial];
 }
 
 function ReelistApp() {
@@ -101,7 +113,15 @@ function ReelistApp() {
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
 
-  const [navStack, setNavStack] = useState<NavState[]>([{ tab: 'home' }]);
+  const [navStack, setNavStack] = useState<NavState[]>(readInitialNavStack);
+  const navStackRef = useRef<NavState[]>(navStack);
+  navStackRef.current = navStack;
+  const historyIdxRef = useRef<number>(
+    typeof window !== 'undefined' && isValidHistoryPayload(window.history.state)
+      ? window.history.state.navIdx
+      : 0
+  );
+  const scrollPositionsRef = useRef<Map<number, number>>(new Map());
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [librarySearchOpen, setLibrarySearchOpen] = useState(false);
   const [librarySearchQuery, setLibrarySearchQuery] = useState('');
@@ -113,6 +133,53 @@ function ReelistApp() {
     currentNav.tab === 'details' && currentNav.detailTarget
       ? `details_${currentNav.detailTarget.mediaType}_${currentNav.detailTarget.tmdbId}`
       : currentNav.tab;
+
+  // Synchronize browser History API for back/forward buttons & clean URL routes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const prevScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+
+    if (!isValidHistoryPayload(window.history.state)) {
+      const initialStack = navStackRef.current;
+      const initialPath = navStateToPath(initialStack[initialStack.length - 1] || { tab: 'home' });
+      const targetUrl =
+        window.location.search && window.location.pathname === '/'
+          ? `${initialPath}${window.location.search}`
+          : initialPath;
+      window.history.replaceState({ navIdx: 0, stack: initialStack }, '', targetUrl);
+      historyIdxRef.current = 0;
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      setQuickAddOpen(false);
+      if (isValidHistoryPayload(event.state)) {
+        const nextIdx = event.state.navIdx;
+        const nextStack = event.state.stack;
+        historyIdxRef.current = nextIdx;
+        navStackRef.current = nextStack;
+        setNavStack(nextStack);
+        const savedScroll = scrollPositionsRef.current.get(nextIdx) ?? 0;
+        window.requestAnimationFrame(() => {
+          window.scrollTo({ top: savedScroll, behavior: 'auto' });
+        });
+      } else {
+        const fallback = pathToNavState(window.location.pathname);
+        const fallbackStack = [fallback];
+        historyIdxRef.current = 0;
+        navStackRef.current = fallbackStack;
+        setNavStack(fallbackStack);
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.history.scrollRestoration = prevScrollRestoration;
+    };
+  }, []);
 
   // Apply resolved theme to document root
   useEffect(() => {
@@ -265,46 +332,68 @@ function ReelistApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady, user, entriesLoading, tasteProfile.fingerprint]);
 
-  const navigateTopTab = (tab: 'home' | 'library' | 'search') => {
-    setNavStack([{ tab }]);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const navigateTo = useCallback((target: NavState) => {
+    setQuickAddOpen(false);
+    const currentStack = navStackRef.current;
+    const top = currentStack[currentStack.length - 1];
+    if (areNavStatesEqual(top, target)) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
 
-  const openDetails = (mediaType: MediaType, tmdbId: number) => {
-    setNavStack((prev) => [...prev, { tab: 'details', detailTarget: { mediaType, tmdbId } }]);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    scrollPositionsRef.current.set(historyIdxRef.current, window.scrollY);
+    const nextStack = pushNavStack(currentStack, target);
+    const nextIdx = historyIdxRef.current + 1;
+    navStackRef.current = nextStack;
+    historyIdxRef.current = nextIdx;
+    setNavStack(nextStack);
 
-  const openProfile = () => {
-    setNavStack((prev) => {
-      const top = prev[prev.length - 1];
-      if (top?.tab === 'profile') return prev;
-      return [...prev, { tab: 'profile' }];
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ navIdx: nextIdx, stack: nextStack }, '', navStateToPath(target));
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, []);
 
-  const openStatistics = () => {
-    setNavStack((prev) => {
-      const top = prev[prev.length - 1];
-      if (top?.tab === 'statistics') return prev;
-      return [...prev, { tab: 'statistics' }];
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const navigateTopTab = useCallback(
+    (tab: 'home' | 'library' | 'search') => {
+      navigateTo({ tab });
+    },
+    [navigateTo]
+  );
 
-  const openRecommendations = () => {
-    setNavStack((prev) => {
-      const top = prev[prev.length - 1];
-      if (top?.tab === 'recommendations') return prev;
-      return [...prev, { tab: 'recommendations' }];
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const openDetails = useCallback(
+    (mediaType: MediaType, tmdbId: number) => {
+      navigateTo({ tab: 'details', detailTarget: { mediaType, tmdbId } });
+    },
+    [navigateTo]
+  );
 
-  const goBack = () => {
-    setNavStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : [{ tab: 'home' }]));
-  };
+  const openProfile = useCallback(() => {
+    navigateTo({ tab: 'profile' });
+  }, [navigateTo]);
+
+  const openStatistics = useCallback(() => {
+    navigateTo({ tab: 'statistics' });
+  }, [navigateTo]);
+
+  const openRecommendations = useCallback(() => {
+    navigateTo({ tab: 'recommendations' });
+  }, [navigateTo]);
+
+  const goBack = useCallback(() => {
+    if (
+      typeof window !== 'undefined' &&
+      historyIdxRef.current > 0 &&
+      navStackRef.current.length > 1
+    ) {
+      window.history.back();
+      return;
+    }
+    const top = navStackRef.current[navStackRef.current.length - 1];
+    if (!areNavStatesEqual(top, { tab: 'home' })) {
+      navigateTo({ tab: 'home' });
+    }
+  }, [navigateTo]);
 
   const handleSaveEntry = useCallback(async (entry: LibraryEntry) => {
     if (!user) return;
@@ -459,7 +548,13 @@ function ReelistApp() {
       await signOut(auth);
     }
     setUser(null);
-    setNavStack([{ tab: 'home' }]);
+    const homeStack: NavState[] = [{ tab: 'home' }];
+    navStackRef.current = homeStack;
+    historyIdxRef.current = 0;
+    setNavStack(homeStack);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({ navIdx: 0, stack: homeStack }, '', '/');
+    }
   };
 
   const handleLocalSignIn = (localUser: UserProfile) => {
@@ -469,7 +564,13 @@ function ReelistApp() {
       // Ignore
     }
     setUser(localUser);
-    setNavStack([{ tab: 'home' }]);
+    const homeStack: NavState[] = [{ tab: 'home' }];
+    navStackRef.current = homeStack;
+    historyIdxRef.current = 0;
+    setNavStack(homeStack);
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({ navIdx: 0, stack: homeStack }, '', '/');
+    }
   };
 
   if (!authReady) {
