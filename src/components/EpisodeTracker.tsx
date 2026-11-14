@@ -161,7 +161,7 @@ export const EpisodeTracker: React.FC<EpisodeTrackerProps> = ({
       : null;
 
   return (
-    <section aria-label="Episode tracker" className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] p-4 md:p-6">
+    <section aria-label="Episode tracker" className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)]/74 p-4 dark:bg-[var(--surface)]/64 md:p-6">
       {/* Header: Resume Point + +1 Episode + Overall Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5">

@@ -384,11 +384,21 @@ export function sortAndFilterEntries(
   entries: LibraryEntry[],
   statusTab: LibraryStatusFilter,
   mediaFilter: MediaFilterOption,
-  sortBy: LibrarySortOption
+  sortBy: LibrarySortOption,
+  searchQuery: string = ''
 ): LibraryEntry[] {
+  const normalizedQuery = searchQuery.trim().toLowerCase();
   const filtered = entries.filter((item) => {
     if (statusTab !== 'all' && item.status !== statusTab) return false;
     if (mediaFilter !== 'all' && item.mediaType !== mediaFilter) return false;
+    if (normalizedQuery) {
+      const titleMatch = item.title.toLowerCase().includes(normalizedQuery);
+      const yearMatch = (item.year || '').toLowerCase().includes(normalizedQuery);
+      const genreMatch = (item.genres || []).some((g) =>
+        g.toLowerCase().includes(normalizedQuery)
+      );
+      if (!titleMatch && !yearMatch && !genreMatch) return false;
+    }
     return true;
   });
 

@@ -1,9 +1,11 @@
 import type { LibraryEntry, WatchStatus } from '../types/reelist';
 
+export type StatisticsTimeframe = 6 | 12 | 'all';
+
 export interface MonthlyActivityPoint {
-  monthKey: string; // YYYY-MM
-  label: string; // e.g. "Nov"
-  fullLabel: string; // e.g. "Nov 2026"
+  monthKey: string; // YYYY-MM or YYYY in 'all' mode
+  label: string; // e.g. "Nov" or "2026"
+  fullLabel: string; // e.g. "Nov 2026" or "2026"
   movies: number;
   series: number;
   total: number;
@@ -87,6 +89,38 @@ export function resolveActivityMonthKey(entry: LibraryEntry): string | null {
   return null;
 }
 
+export function resolveActivityYear(entry: LibraryEntry): number | null {
+  const yearPrefixRegex = /^(\d{4})/;
+
+  if (entry.finishedAt) {
+    const match = entry.finishedAt.trim().match(yearPrefixRegex);
+    if (match) {
+      const y = Number(match[1]);
+      if (y >= 1900 && y <= 2100) return y;
+    }
+  }
+
+  if (entry.status === 'watching') {
+    const activeIso = entry.lastWatchedAt || entry.startedAt || entry.updatedAt || entry.addedAt;
+    const match = activeIso?.trim().match(yearPrefixRegex);
+    if (match) {
+      const y = Number(match[1]);
+      if (y >= 1900 && y <= 2100) return y;
+    }
+  }
+
+  if (entry.status === 'watched') {
+    const completedIso = entry.lastWatchedAt || entry.updatedAt || entry.addedAt || entry.year;
+    const match = completedIso?.trim().match(yearPrefixRegex);
+    if (match) {
+      const y = Number(match[1]);
+      if (y >= 1900 && y <= 2100) return y;
+    }
+  }
+
+  return null;
+}
+
 export function buildRecentMonthBuckets(monthCount: number, now: Date = new Date()): MonthlyActivityPoint[] {
   const count = Math.max(1, Math.min(24, monthCount));
   const buckets: MonthlyActivityPoint[] = [];
@@ -111,9 +145,53 @@ export function buildRecentMonthBuckets(monthCount: number, now: Date = new Date
   return buckets;
 }
 
+export function buildAllTimeYearBuckets(
+  entries: LibraryEntry[],
+  now: Date = new Date()
+): MonthlyActivityPoint[] {
+  const currentYear = now.getFullYear();
+  const activeYears: number[] = [];
+
+  for (const entry of entries) {
+    const y = resolveActivityYear(entry);
+    if (y !== null) {
+      activeYears.push(y);
+    }
+  }
+
+  const defaultStartYear = currentYear - 4;
+  const minYear = activeYears.length > 0 ? Math.min(...activeYears, defaultStartYear) : defaultStartYear;
+  const maxYear = activeYears.length > 0 ? Math.max(...activeYears, currentYear) : currentYear;
+
+  const yearSet = new Set<number>();
+  if (maxYear - minYear <= 12) {
+    for (let y = minYear; y <= maxYear; y += 1) {
+      yearSet.add(y);
+    }
+  } else {
+    for (const y of activeYears) {
+      yearSet.add(y);
+    }
+    for (let y = defaultStartYear; y <= currentYear; y += 1) {
+      yearSet.add(y);
+    }
+  }
+
+  return Array.from(yearSet)
+    .sort((a, b) => a - b)
+    .map((y) => ({
+      monthKey: String(y),
+      label: String(y),
+      fullLabel: String(y),
+      movies: 0,
+      series: 0,
+      total: 0,
+    }));
+}
+
 export function computeLibraryStatistics(
   entries: LibraryEntry[],
-  options: { monthWindow?: number; now?: Date } = {}
+  options: { monthWindow?: number | 'all'; now?: Date } = {}
 ): LibraryStatistics {
   const { monthWindow = 6, now = new Date() } = options;
 
@@ -132,7 +210,10 @@ export function computeLibraryStatistics(
   let ratingSum = 0;
   let ratedCount = 0;
 
-  const monthlyActivity = buildRecentMonthBuckets(monthWindow, now);
+  const isAllTime = monthWindow === 'all';
+  const monthlyActivity = isAllTime
+    ? buildAllTimeYearBuckets(entries, now)
+    : buildRecentMonthBuckets(monthWindow, now);
   const monthIndexByKey = new Map<string, number>();
   monthlyActivity.forEach((b, idx) => monthIndexByKey.set(b.monthKey, idx));
 
@@ -166,9 +247,14 @@ export function computeLibraryStatistics(
       ratingCounts.set(rounded, (ratingCounts.get(rounded) || 0) + 1);
     }
 
-    const monthKey = resolveActivityMonthKey(entry);
-    if (monthKey) {
-      const idx = monthIndexByKey.get(monthKey);
+    const bucketKey = isAllTime
+      ? (() => {
+          const y = resolveActivityYear(entry);
+          return y !== null ? String(y) : null;
+        })()
+      : resolveActivityMonthKey(entry);
+    if (bucketKey) {
+      const idx = monthIndexByKey.get(bucketKey);
       if (idx !== undefined) {
         if (entry.mediaType === 'movie') {
           monthlyActivity[idx].movies += 1;

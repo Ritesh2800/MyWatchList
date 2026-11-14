@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'motion/react';
 import React, { useState } from 'react';
 import type {
   LibraryEntry,
@@ -13,6 +14,7 @@ import {
   SparklesIcon,
   StarIcon,
 } from './Icons';
+import { LiquidGlass } from './ui/liquid-glass';
 import { MediaArt } from './MediaArt';
 import { ContinueWatchingSkeleton, TrendingGridSkeleton } from './SkeletonScreens';
 import { Statistics } from './Statistics';
@@ -34,6 +36,24 @@ interface HomeViewProps {
   onOpenDetails: (mediaType: MediaType, tmdbId: number) => void;
   onOpenStatistics: () => void;
 }
+
+const BANNER_SLIDE_VARIANTS = {
+  enter: (direction: number) => ({
+    x: direction >= 0 ? '100%' : '-100%',
+    opacity: 0.35,
+    scale: 1.03,
+  }),
+  center: {
+    x: '0%',
+    opacity: 1,
+    scale: 1,
+  },
+  exit: (direction: number) => ({
+    x: direction >= 0 ? '-100%' : '100%',
+    opacity: 0.35,
+    scale: 0.98,
+  }),
+};
 
 function getEntryProgressPercent(entry: LibraryEntry): number {
   if (entry.mediaType === 'tv') {
@@ -78,13 +98,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onOpenDetails,
   onOpenStatistics,
 }) => {
-  const [continueIndex, setContinueIndex] = useState(0);
+  const [[continueIndex, slideDirection], setContinueSlide] = useState<[number, number]>([0, 1]);
   const safeContinueIndex =
     watchingEntries.length > 0
       ? Math.min(continueIndex, watchingEntries.length - 1)
       : 0;
   const featured = watchingEntries[safeContinueIndex] || null;
   const showContinueSkeleton = entriesLoading && watchingEntries.length === 0;
+
+  const handleCycleContinue = (direction: 1 | -1) => {
+    if (watchingEntries.length <= 1) return;
+    const nextIndex =
+      (safeContinueIndex + direction + watchingEntries.length) % watchingEntries.length;
+    setContinueSlide([nextIndex, direction]);
+  };
 
   return (
     <div className="space-y-8 md:space-y-10">
@@ -93,82 +120,132 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* Desktop Featured Continue Watching Banner */}
       {featured && (
         <section className="hidden md:block" aria-label="Featured continue watching">
-          <div className="relative h-[290px] w-full overflow-hidden rounded-[24px] lg:h-[320px]">
-            <MediaArt
-              title={featured.title}
-              path={featured.backdropPath || featured.posterPath}
-              size="w1280"
-              variant="backdrop"
-              accentGradient={featured.accentGradient}
-              className="h-full w-full"
-            />
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background:
-                  'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 65%, rgba(0,0,0,0.82) 100%)',
-              }}
-            />
+          <div className="relative h-[290px] w-full overflow-hidden rounded-[24px] bg-[#141413] lg:h-[320px]">
+            <AnimatePresence initial={false} custom={slideDirection}>
+              <motion.div
+                key={`${featured.id}_${safeContinueIndex}`}
+                custom={slideDirection}
+                variants={BANNER_SLIDE_VARIANTS}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { duration: 0.48, ease: [0.22, 1, 0.36, 1] },
+                  opacity: { duration: 0.34, ease: 'easeOut' },
+                  scale: { duration: 0.48, ease: [0.22, 1, 0.36, 1] },
+                }}
+                className="absolute inset-0 h-full w-full will-change-transform"
+              >
+                <MediaArt
+                  title={featured.title}
+                  path={featured.backdropPath || featured.posterPath}
+                  size="w1280"
+                  variant="backdrop"
+                  accentGradient={featured.accentGradient}
+                  className="h-full w-full"
+                />
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 65%, rgba(0,0,0,0.82) 100%)',
+                  }}
+                />
+
+                <motion.div
+                  initial={{ x: slideDirection >= 0 ? 28 : -28, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.42, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-4 p-8"
+                >
+                  <div className="min-w-0 max-w-xl">
+                    <p className="text-[11px] font-semibold tracking-[0.12em] text-white/75 uppercase">
+                      CONTINUE WATCHING
+                    </p>
+                    <h1 className="mt-1.5 font-display text-[36px] leading-[1.08] font-bold text-white">
+                      {featured.title}
+                    </h1>
+                    <p className="mt-1.5 text-[15px] text-white/80">
+                      {getLongProgressLabel(featured)}
+                    </p>
+                    <div className="mt-4 h-[4px] w-[240px] overflow-hidden rounded-full bg-white/25">
+                      <div
+                        className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
+                        style={{ width: `${getEntryProgressPercent(featured)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onOpenDetails(featured.mediaType, featured.tmdbId)}
+                    className="tap-press inline-flex min-h-[44px] items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#141413] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  >
+                    <PlayIcon size={15} />
+                    <span>Resume</span>
+                  </button>
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
 
             {/* Desktop-only circular navigation arrows to cycle through all Continue Watching titles */}
-            <div className="absolute top-6 right-6 z-10 hidden items-center gap-2 md:flex">
+            <div
+              className="absolute top-6 right-6 z-20 hidden items-center gap-2 md:flex"
+              style={{ ['--lg-tint-rgb' as string]: '20 20 24' }}
+            >
               {watchingEntries.length > 1 && (
-                <span className="rounded-full border border-white/20 bg-black/45 px-3 py-1.5 text-[12px] font-semibold text-white/90 tabular-nums backdrop-blur-md">
+                <LiquidGlass
+                  radius={999}
+                  bevelDepth={10}
+                  scale={28}
+                  aberration={2}
+                  frost={0.5}
+                  tint={0.42}
+                  className="shadow-[0_6px_20px_rgb(0_0_0/0.28),0_0_0_1px_rgb(255_255_255/0.12),inset_0_1px_0_rgb(255_255_255/0.24)]"
+                  contentClassName="px-3 py-1.5 text-[12px] font-semibold text-white tabular-nums"
+                >
                   {safeContinueIndex + 1} / {watchingEntries.length}
-                </span>
+                </LiquidGlass>
               )}
               <button
                 type="button"
                 aria-label="Previous continue watching title"
                 disabled={watchingEntries.length <= 1}
-                onClick={() =>
-                  setContinueIndex(
-                    (safeContinueIndex - 1 + watchingEntries.length) % watchingEntries.length
-                  )
-                }
-                className="tap-press inline-flex h-[44px] w-[44px] items-center justify-center rounded-full border border-white/25 bg-black/45 text-white backdrop-blur-md transition hover:bg-black/65 disabled:cursor-default disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                onClick={() => handleCycleContinue(-1)}
+                className="tap-press inline-flex h-[44px] w-[44px] items-center justify-center rounded-full text-white transition-transform duration-200 hover:scale-[1.06] disabled:cursor-default disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                <ChevronLeftIcon size={18} />
+                <LiquidGlass
+                  radius={22}
+                  bevelDepth={12}
+                  scale={30}
+                  aberration={2}
+                  frost={0.5}
+                  tint={0.42}
+                  className="size-full shadow-[0_6px_20px_rgb(0_0_0/0.28),0_0_0_1px_rgb(255_255_255/0.12),inset_0_1px_0_rgb(255_255_255/0.24)]"
+                  contentClassName="flex size-full items-center justify-center"
+                >
+                  <ChevronLeftIcon size={18} />
+                </LiquidGlass>
               </button>
               <button
                 type="button"
                 aria-label="Next continue watching title"
                 disabled={watchingEntries.length <= 1}
-                onClick={() =>
-                  setContinueIndex((safeContinueIndex + 1) % watchingEntries.length)
-                }
-                className="tap-press inline-flex h-[44px] w-[44px] items-center justify-center rounded-full border border-white/25 bg-black/45 text-white backdrop-blur-md transition hover:bg-black/65 disabled:cursor-default disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                onClick={() => handleCycleContinue(1)}
+                className="tap-press inline-flex h-[44px] w-[44px] items-center justify-center rounded-full text-white transition-transform duration-200 hover:scale-[1.06] disabled:cursor-default disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                <ChevronRightIcon size={18} />
-              </button>
-            </div>
-
-            <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-4 p-8">
-              <div className="min-w-0 max-w-xl">
-                <p className="text-[11px] font-semibold tracking-[0.12em] text-white/75 uppercase">
-                  CONTINUE WATCHING
-                </p>
-                <h1 className="mt-1.5 font-display text-[36px] leading-[1.08] font-bold text-white">
-                  {featured.title}
-                </h1>
-                <p className="mt-1.5 text-[15px] text-white/80">
-                  {getLongProgressLabel(featured)}
-                </p>
-                <div className="mt-4 h-[4px] w-[240px] overflow-hidden rounded-full bg-white/25">
-                  <div
-                    className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
-                    style={{ width: `${getEntryProgressPercent(featured)}%` }}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => onOpenDetails(featured.mediaType, featured.tmdbId)}
-                className="tap-press inline-flex min-h-[44px] items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#141413] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                <PlayIcon size={15} />
-                <span>Resume</span>
+                <LiquidGlass
+                  radius={22}
+                  bevelDepth={12}
+                  scale={30}
+                  aberration={2}
+                  frost={0.5}
+                  tint={0.42}
+                  className="size-full shadow-[0_6px_20px_rgb(0_0_0/0.28),0_0_0_1px_rgb(255_255_255/0.12),inset_0_1px_0_rgb(255_255_255/0.24)]"
+                  contentClassName="flex size-full items-center justify-center"
+                >
+                  <ChevronRightIcon size={18} />
+                </LiquidGlass>
               </button>
             </div>
           </div>

@@ -33,6 +33,7 @@ import {
 } from './Icons';
 import { LiquidGlassDropdown } from './LiquidGlassDropdown';
 import { MediaArt } from './MediaArt';
+import { PosterAmbientBackdrop } from './PosterAmbientBackdrop';
 
 interface DetailsViewProps {
   mediaType: MediaType;
@@ -424,20 +425,28 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
       : null;
 
   return (
-    <div className="space-y-7">
-      {/* Backdrop + Header Summary */}
-      <div className="relative overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)]">
-        <div className="relative h-[220px] w-full md:h-[310px]">
+    <div className="relative">
+      <PosterAmbientBackdrop
+        title={details.title}
+        posterPath={details.posterPath}
+        backdropPath={details.backdropPath}
+        accentGradient={details.accentGradient}
+      />
+
+      <div className="relative z-10 space-y-7">
+        {/* Backdrop + Header Summary */}
+        <div className="relative isolate overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)]/72 dark:bg-[var(--surface)]/62">
+        <div className="relative isolate h-[220px] w-full overflow-hidden rounded-t-[23px] md:h-[310px]">
           <MediaArt
             title={details.title}
             path={details.backdropPath || details.posterPath}
             size="w1280"
             variant="backdrop"
             accentGradient={details.accentGradient}
-            className="h-full w-full"
+            className="h-full w-full rounded-t-[23px]"
           />
           <div
-            className="pointer-events-none absolute inset-0"
+            className="pointer-events-none absolute inset-0 rounded-t-[23px]"
             style={{
               background:
                 'linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.65) 100%)',
@@ -488,7 +497,7 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
                 href={`https://www.youtube.com/watch?v=${details.trailerKey}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="tap-press inline-flex min-h-[44px] shrink-0 self-start items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 text-[13px] font-semibold text-[var(--ink)] hover:bg-[var(--surface-subtle)] sm:self-end"
+                className="tap-press inline-flex min-h-[44px] shrink-0 self-start items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] px-4 text-[13px] font-semibold text-[var(--ink)] hover:border-[var(--muted)] sm:self-end"
               >
                 <PlayIcon size={14} />
                 <span>Trailer</span>
@@ -509,7 +518,7 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
       {/* Add Your Status Action + Dropdown + Remove Button */}
       <section
         aria-label="Watch status"
-        className="relative rounded-[22px] border border-[var(--border)] bg-[var(--surface)] p-4 md:p-6"
+        className="relative rounded-[22px] border border-[var(--border)] bg-[var(--surface)]/74 p-4 dark:bg-[var(--surface)]/64 md:p-6"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="relative flex flex-wrap items-center gap-2.5">
@@ -632,7 +641,7 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
       )}
 
       {/* Personal Rating, Dates & Notes */}
-      <section aria-label="Rating and notes" className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] p-4 md:p-6">
+      <section aria-label="Rating and notes" className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)]/74 p-4 dark:bg-[var(--surface)]/64 md:p-6">
         <h2 className="font-display text-[18px] font-bold text-[var(--ink)]">My notes &amp; rating</h2>
 
         <div className="mt-4">
@@ -712,7 +721,7 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
       </section>
 
       {/* Where to Watch in India */}
-      <section aria-label="Where to watch in India" className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] p-4 md:p-6">
+      <section aria-label="Where to watch in India" className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)]/74 p-4 dark:bg-[var(--surface)]/64 md:p-6">
         <h2 className="font-display text-[18px] font-bold text-[var(--ink)]">
           Where to watch (India)
         </h2>
@@ -754,7 +763,7 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
             {details.cast.map((member) => (
               <div
                 key={member.id}
-                className="w-[150px] shrink-0 rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-3.5"
+                className="w-[150px] shrink-0 rounded-[16px] border border-[var(--border)] bg-[var(--surface)]/74 p-3.5 dark:bg-[var(--surface)]/64"
               >
                 <p className="truncate text-[14px] font-semibold text-[var(--ink)]">
                   {member.name}
@@ -767,6 +776,7 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
           </div>
         </section>
       )}
+      </div>
 
       {/* Completed Pop-Out Card (compact floating modal, does not cover full page) */}
       <CompletedModal

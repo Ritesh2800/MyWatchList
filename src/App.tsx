@@ -5,7 +5,7 @@ import { DetailsView } from './components/DetailsView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { HomeView } from './components/HomeView';
 import { LibraryView } from './components/LibraryView';
-import { FloatingBottomNav, GlassSvgFilter, TopBar } from './components/LiquidGlassChrome';
+import { FloatingBottomNav, TopBar } from './components/LiquidGlassChrome';
 import { ProfileView } from './components/ProfileView';
 import { QuickAddModal } from './components/QuickAddModal';
 import { RecommendationsView } from './components/RecommendationsView';
@@ -103,6 +103,8 @@ function ReelistApp() {
 
   const [navStack, setNavStack] = useState<NavState[]>([{ tab: 'home' }]);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [librarySearchOpen, setLibrarySearchOpen] = useState(false);
+  const [librarySearchQuery, setLibrarySearchQuery] = useState('');
   const checkedCompletedSeriesRef = useRef<Set<string>>(new Set());
   const isOnline = useOnlineStatus();
 
@@ -479,19 +481,22 @@ function ReelistApp() {
   }
 
   return (
-    <div className="min-h-dvh bg-[var(--bg)] text-[var(--ink)]">
-      <GlassSvgFilter />
-
+    <div className="relative min-h-dvh bg-[var(--bg)] text-[var(--ink)]">
+      <div id="page-ambient-slot" aria-hidden="true" />
       <TopBar
         activeTab={currentNav.tab}
         user={user}
+        librarySearchQuery={librarySearchQuery}
+        librarySearchOpen={librarySearchOpen}
+        onLibrarySearchOpenChange={setLibrarySearchOpen}
+        onLibrarySearchChange={setLibrarySearchQuery}
         onBack={goBack}
         onOpenProfile={openProfile}
         onGoHome={() => navigateTopTab('home')}
       />
 
       <main
-        className={`mx-auto max-w-[1344px] px-4 pb-[118px] md:px-8 md:pb-[124px] ${
+        className={`relative z-10 mx-auto max-w-[1344px] px-4 pb-[118px] md:px-8 md:pb-[124px] ${
           currentNav.tab === 'home' ? 'pt-5 md:pt-7' : 'pt-[78px] md:pt-[92px]'
         }`}
       >
@@ -538,6 +543,11 @@ function ReelistApp() {
             <LibraryView
               entries={entries}
               loading={entriesLoading}
+              searchQuery={librarySearchQuery}
+              onClearSearch={() => {
+                setLibrarySearchQuery('');
+                setLibrarySearchOpen(false);
+              }}
               onOpenDetails={openDetails}
               onGoSearch={() => navigateTopTab('search')}
             />

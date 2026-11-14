@@ -201,6 +201,11 @@ test('sortAndFilterEntries supports all tab and sorts by completed/release year 
   assert.deepEqual(newestFirst.map((e) => e.id), ['1_movie', '2_tv', '3_movie']);
   const oldestFirst = sortAndFilterEntries(entries, 'all', 'all', 'year_asc');
   assert.deepEqual(oldestFirst.map((e) => e.id), ['3_movie', '2_tv', '1_movie']);
+
+  const searched = sortAndFilterEntries(entries, 'all', 'all', 'year_desc', 'active');
+  assert.deepEqual(searched.map((e) => e.id), ['2_tv']);
+  const yearSearched = sortAndFilterEntries(entries, 'all', 'all', 'year_desc', '2020');
+  assert.deepEqual(yearSearched.map((e) => e.id), ['3_movie']);
 });
 
 test('detectNewSeasonForCompletedSeries triggers move to watching when a new season releases', () => {

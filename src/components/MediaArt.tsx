@@ -42,7 +42,7 @@ export const MediaArt: React.FC<MediaArtProps> = ({
 
   return (
     <div
-      className={`relative overflow-hidden select-none ${className}`}
+      className={`relative isolate overflow-hidden select-none ${className}`}
       style={{
         background:
           variant === 'backdrop'
@@ -52,7 +52,7 @@ export const MediaArt: React.FC<MediaArtProps> = ({
     >
       {/* Subtle atmospheric sheen */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-35"
+        className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-35"
         style={{
           background:
             'radial-gradient(circle at 25% 20%, rgba(255,255,255,0.42) 0%, transparent 58%)',
@@ -65,7 +65,7 @@ export const MediaArt: React.FC<MediaArtProps> = ({
           loading="lazy"
           referrerPolicy="no-referrer"
           onError={() => setFailed(true)}
-          className="relative h-full w-full object-cover transition-opacity duration-200"
+          className="relative h-full w-full rounded-[inherit] object-cover transition-opacity duration-200"
         />
       )}
     </div>

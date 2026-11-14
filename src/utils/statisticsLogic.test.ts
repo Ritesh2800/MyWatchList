@@ -119,4 +119,24 @@ test('computeLibraryStatistics aggregates monthly counts, genres, ratings, and s
   const completedStatus = stats.statusDistribution.find((s) => s.status === 'watched');
   assert.equal(completedStatus?.label, 'Completed');
   assert.equal(completedStatus?.count, 2);
+
+  // Verify 'all' timeframe includes year-only completions from earlier years
+  const allTimeEntries: LibraryEntry[] = [
+    ...entries,
+    makeEntry({
+      id: '14_movie',
+      tmdbId: 14,
+      mediaType: 'movie',
+      status: 'watched',
+      finishedAt: '2022',
+      updatedAt: '2026-11-10T00:00:00Z',
+    }),
+  ];
+  const allStats = computeLibraryStatistics(allTimeEntries, { monthWindow: 'all', now: ref });
+  assert.equal(allStats.monthlyWatchTotal, 4);
+  const y2022 = allStats.monthlyActivity.find((m) => m.monthKey === '2022');
+  const y2026 = allStats.monthlyActivity.find((m) => m.monthKey === '2026');
+  assert.equal(y2022?.movies, 1);
+  assert.equal(y2026?.total, 3);
 });
+

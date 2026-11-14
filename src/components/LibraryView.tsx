@@ -24,6 +24,8 @@ const SORT_OPTIONS: LiquidGlassOption[] = [
 interface LibraryViewProps {
   entries: LibraryEntry[];
   loading: boolean;
+  searchQuery?: string;
+  onClearSearch?: () => void;
   onOpenDetails: (mediaType: MediaType, tmdbId: number) => void;
   onGoSearch: () => void;
 }
@@ -56,6 +58,8 @@ function getPosterStatusBadge(entry: LibraryEntry): string {
 export const LibraryView: React.FC<LibraryViewProps> = ({
   entries,
   loading,
+  searchQuery = '',
+  onClearSearch,
   onOpenDetails,
   onGoSearch,
 }) => {
@@ -64,8 +68,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
   const [sortBy, setSortBy] = useState<LibrarySortOption>('year_desc');
 
   const items = useMemo(
-    () => sortAndFilterEntries(entries, activeStatus, mediaFilter, sortBy),
-    [entries, activeStatus, mediaFilter, sortBy]
+    () => sortAndFilterEntries(entries, activeStatus, mediaFilter, sortBy, searchQuery),
+    [entries, activeStatus, mediaFilter, sortBy, searchQuery]
   );
 
   const getProgressPercent = (entry: LibraryEntry): number => {
@@ -168,7 +172,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
             options={SORT_OPTIONS}
             align="right"
             menuWidthClass="w-52"
-            triggerClassName="bg-[var(--surface)] px-3.5 sm:px-4 min-h-[40px] sm:min-h-[44px]"
+            triggerClassName="px-3.5 sm:px-4 min-h-[40px] sm:min-h-[44px]"
             onSelect={(val) => setSortBy(val as LibrarySortOption)}
           />
         </div>
@@ -178,18 +182,35 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
       {loading ? (
         <LibraryGridSkeleton count={9} />
       ) : items.length === 0 ? (
-        <div className="mt-10 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-8 text-center">
-          <p className="text-[15px] text-[var(--muted)]">
-            Nothing here yet. Search for something to add.
-          </p>
-          <button
-            type="button"
-            onClick={onGoSearch}
-            className="tap-press mt-4 min-h-[44px] rounded-full bg-[var(--inverse-bg)] px-6 text-sm font-semibold text-[var(--inverse-ink)]"
-          >
-            Search titles
-          </button>
-        </div>
+        searchQuery.trim() ? (
+          <div className="mt-10 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-8 text-center">
+            <p className="text-[15px] text-[var(--muted)]">
+              No titles in your library match &ldquo;{searchQuery.trim()}&rdquo;.
+            </p>
+            {onClearSearch && (
+              <button
+                type="button"
+                onClick={onClearSearch}
+                className="tap-press mt-4 min-h-[44px] rounded-full bg-[var(--inverse-bg)] px-6 text-sm font-semibold text-[var(--inverse-ink)]"
+              >
+                Clear search
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-8 text-center">
+            <p className="text-[15px] text-[var(--muted)]">
+              Nothing here yet. Search for something to add.
+            </p>
+            <button
+              type="button"
+              onClick={onGoSearch}
+              className="tap-press mt-4 min-h-[44px] rounded-full bg-[var(--inverse-bg)] px-6 text-sm font-semibold text-[var(--inverse-ink)]"
+            >
+              Search titles
+            </button>
+          </div>
+        )
       ) : (
         <div className="mt-5 grid grid-cols-2 gap-3.5 sm:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(168px,1fr))] md:gap-5">
           {items.map((entry) => {

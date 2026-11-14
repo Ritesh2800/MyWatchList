@@ -9,7 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 import type { LibraryEntry, MediaType } from '../types/reelist';
-import { computeLibraryStatistics } from '../utils/statisticsLogic';
+import { computeLibraryStatistics, type StatisticsTimeframe } from '../utils/statisticsLogic';
 import { ChevronRightIcon } from './Icons';
 
 interface StatisticsProps {
@@ -65,7 +65,9 @@ export const Statistics: React.FC<StatisticsProps> = ({
   onGoSearch,
   onOpenDetails,
 }) => {
-  const [monthWindow, setMonthWindow] = useState<6 | 12>(variant === 'preview' ? 6 : 12);
+  const [monthWindow, setMonthWindow] = useState<StatisticsTimeframe>(
+    variant === 'preview' ? 6 : 12
+  );
   const stats = useMemo(
     () => computeLibraryStatistics(entries, { monthWindow }),
     [entries, monthWindow]
@@ -304,7 +306,7 @@ export const Statistics: React.FC<StatisticsProps> = ({
         <div
           role="group"
           aria-label="Monthly timeframe"
-          className="inline-flex rounded-full border border-[var(--border)] bg-[var(--surface)] p-1"
+          className="inline-flex flex-wrap items-center rounded-full border border-[var(--border)] bg-[var(--surface)] p-1"
         >
           <button
             type="button"
@@ -329,6 +331,18 @@ export const Statistics: React.FC<StatisticsProps> = ({
             }`}
           >
             Last 12 months
+          </button>
+          <button
+            type="button"
+            aria-pressed={monthWindow === 'all'}
+            onClick={() => setMonthWindow('all')}
+            className={`min-h-[40px] rounded-full px-3 text-[12px] font-semibold whitespace-nowrap transition-colors sm:px-4 sm:text-[13px] ${
+              monthWindow === 'all'
+                ? 'bg-[var(--inverse-bg)] text-[var(--inverse-ink)]'
+                : 'text-[var(--muted)] hover:text-[var(--ink)]'
+            }`}
+          >
+            All time
           </button>
         </div>
       </div>
@@ -417,10 +431,12 @@ export const Statistics: React.FC<StatisticsProps> = ({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h2 className="font-display text-[18px] font-bold text-[var(--ink)]">
-                    Watched per month
+                    {monthWindow === 'all' ? 'Watched by year' : 'Watched per month'}
                   </h2>
                   <p className="text-[13px] text-[var(--muted)]">
-                    Completed and active titles over the last {monthWindow} months
+                    {monthWindow === 'all'
+                      ? 'Completed and active titles across all years'
+                      : `Completed and active titles over the last ${monthWindow} months`}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 text-[12px] text-[var(--muted)]">

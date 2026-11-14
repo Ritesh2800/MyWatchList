@@ -14,6 +14,8 @@ import {
   SunIcon,
   TmdbLogo,
 } from './Icons';
+import { ACETERNITY_GLASS_SURFACE_CLASS } from './LiquidGlassChrome';
+import { LiquidGlass } from './ui/liquid-glass';
 
 interface ProfileViewProps {
   user: UserProfile;
@@ -261,7 +263,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               if (e.target === e.currentTarget) setShowInstallGuide(false);
             }}
           >
-            <div className="glass-sheet animate-sheet-up w-full max-w-sm rounded-[24px] p-6">
+            <LiquidGlass
+              radius={24}
+              bevelDepth={12}
+              scale={28}
+              aberration={2}
+              frost={0.9}
+              tint={0.72}
+              className={`animate-sheet-up w-full max-w-sm ${ACETERNITY_GLASS_SURFACE_CLASS}`}
+              contentClassName="p-6"
+            >
               <div className="flex items-center justify-between">
                 <h3 className="font-display text-lg font-bold text-[var(--ink)]">
                   Install SeenIt
@@ -294,7 +305,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               >
                 Got it
               </button>
-            </div>
+            </LiquidGlass>
           </div>,
           document.body
         )}

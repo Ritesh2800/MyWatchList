@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { searchMedia } from '../services/tmdbApi';
 import type { LibraryEntry, MediaSummary, MediaType, WatchStatus } from '../types/reelist';
 import { CheckIcon, CloseIcon, SearchIcon } from './Icons';
+import { ACETERNITY_GLASS_SURFACE_CLASS } from './LiquidGlassChrome';
+import { LiquidGlass } from './ui/liquid-glass';
 import { MediaArt } from './MediaArt';
 
 interface QuickAddModalProps {
@@ -110,7 +112,16 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="glass-sheet animate-sheet-up w-full max-w-lg rounded-[26px] p-4 sm:p-5">
+      <LiquidGlass
+        radius={26}
+        bevelDepth={12}
+        scale={28}
+        aberration={2}
+        frost={0.9}
+        tint={0.72}
+        className={`animate-sheet-up w-full max-w-lg ${ACETERNITY_GLASS_SURFACE_CLASS}`}
+        contentClassName="p-4 sm:p-5"
+      >
         <div className="flex items-center gap-2">
           <div className="flex min-h-[48px] flex-1 items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4">
             <SearchIcon size={18} className="shrink-0 text-[var(--muted)]" />
@@ -210,7 +221,7 @@ export const QuickAddModal: React.FC<QuickAddModalProps> = ({
             })
           )}
         </div>
-      </div>
+      </LiquidGlass>
     </div>
   );
 };

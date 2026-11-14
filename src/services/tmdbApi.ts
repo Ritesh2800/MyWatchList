@@ -180,3 +180,13 @@ export function getTmdbImageUrl(path: string | null | undefined, size: 'w500' | 
   if (!path.startsWith('/')) return null;
   return `https://image.tmdb.org/t/p/${size}${path}`;
 }
+
+export function getTmdbImageProxyUrl(
+  path: string | null | undefined,
+  size: 'w185' | 'w300' = 'w185'
+): string | null {
+  if (!path) return null;
+  const trimmed = path.trim();
+  if (!/^\/[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)$/i.test(trimmed)) return null;
+  return `/api/tmdb/image?path=${encodeURIComponent(trimmed)}&size=${size}`;
+}

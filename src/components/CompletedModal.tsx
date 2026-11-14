@@ -9,6 +9,8 @@ import {
   normalizeRating,
 } from '../utils/completedForm';
 import { CloseIcon } from './Icons';
+import { ACETERNITY_GLASS_SURFACE_CLASS } from './LiquidGlassChrome';
+import { LiquidGlass } from './ui/liquid-glass';
 
 interface CompletedModalProps {
   open: boolean;
@@ -102,14 +104,23 @@ export const CompletedModal: React.FC<CompletedModalProps> = ({
       className="animate-backdrop-in fixed inset-0 z-[60] flex items-center justify-center bg-black/45 p-4 backdrop-blur-[4px]"
       onClick={onClose}
     >
-      <form
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="completed-modal-title"
-        onSubmit={(e) => void handleSubmit(e)}
+      <LiquidGlass
+        radius={26}
+        bevelDepth={12}
+        scale={28}
+        aberration={2}
+        frost={0.9}
+        tint={0.72}
         onClick={(e) => e.stopPropagation()}
-        className="glass-sheet animate-sheet-up max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[26px] p-5 md:p-6"
+        className={`animate-sheet-up max-h-[calc(100dvh-2rem)] w-full max-w-md ${ACETERNITY_GLASS_SURFACE_CLASS}`}
+        contentClassName="max-h-[calc(100dvh-2rem)] overflow-y-auto p-5 md:p-6"
       >
+        <form
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="completed-modal-title"
+          onSubmit={(e) => void handleSubmit(e)}
+        >
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2
@@ -273,7 +284,8 @@ export const CompletedModal: React.FC<CompletedModalProps> = ({
             Save Completed
           </button>
         </div>
-      </form>
+        </form>
+      </LiquidGlass>
     </div>,
     document.body
   );

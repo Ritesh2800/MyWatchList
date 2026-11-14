@@ -1037,5 +1037,60 @@ export function createApiApp(): Express {
     }
   });
 
+  const imageCache = new Map<string, { expiresAt: number; contentType: string; buffer: Buffer }>();
+  const ALLOWED_IMAGE_SIZES = new Set(['w185', 'w300']);
+  const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+  const IMAGE_PATH_RE = /^\/[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)$/i;
+
+  app.get('/api/tmdb/image', async (req, res) => {
+    const rawPath = String(req.query.path || '').trim();
+    const rawSize = String(req.query.size || 'w185').trim();
+    const size = ALLOWED_IMAGE_SIZES.has(rawSize) ? rawSize : 'w185';
+
+    if (!IMAGE_PATH_RE.test(rawPath)) {
+      res.status(400).json({ error: 'Invalid TMDB image path' });
+      return;
+    }
+
+    const cacheKey = `${size}:${rawPath}`;
+    const cached = imageCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      res.setHeader('Content-Type', cached.contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.send(cached.buffer);
+      return;
+    }
+
+    try {
+      const upstream = await fetch(`https://image.tmdb.org/t/p/${size}${rawPath}`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!upstream.ok) {
+        res.status(upstream.status === 404 ? 404 : 502).end();
+        return;
+      }
+
+      const rawType = (upstream.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+      const contentType = ALLOWED_IMAGE_TYPES.has(rawType) ? rawType : 'image/jpeg';
+      const buffer = Buffer.from(await upstream.arrayBuffer());
+
+      if (imageCache.size >= 120) {
+        const oldestKey = imageCache.keys().next().value;
+        if (oldestKey) imageCache.delete(oldestKey);
+      }
+      imageCache.set(cacheKey, {
+        expiresAt: Date.now() + 1000 * 60 * 60,
+        contentType,
+        buffer,
+      });
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.send(buffer);
+    } catch {
+      res.status(502).end();
+    }
+  });
+
   return app;
 }
